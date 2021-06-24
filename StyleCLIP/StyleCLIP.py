@@ -54,11 +54,11 @@ class StyleCLIP(object):
 
     # init_latents = normal_generator.sample(latent_shape).squeeze(-1).to(device)
     self.latents_init = torch.zeros(latent_shape).squeeze(-1).to(device)
-    self.latents = torch.nn.Parameter(latents_init, requires_grad=True)
+    self.latents = torch.nn.Parameter(self.latents_init, requires_grad=True)
 
     self.optimizer = torch.optim.Adam(
-        params=[latents],
-        lr=lr,
+        params=[self.latents],
+        lr=self.lr,
         betas=(0.9, 0.999),
     )
 
@@ -70,7 +70,7 @@ class StyleCLIP(object):
     if self.ref_img_path is None:
         self.ref_img = None
     else:
-        self.ref_img = clip_preprocess(Image.open(ref_img_path)).unsqueeze(0).to(device)
+        self.ref_img = clip_preprocess(Image.open(self.ref_img_path)).unsqueeze(0).to(self.device)
 
     self.clip_normalize = torchvision.transforms.Normalize(
         mean=(0.48145466, 0.4578275, 0.40821073),
@@ -122,7 +122,7 @@ class StyleCLIP(object):
         counter = 0
         path_to_res = ""
         while True:
-            dlatents = latents.repeat(1,18,1)
+            dlatents = self.latents.repeat(1,18,1)
             img = g_synthesis(dlatents)
             
             # NOTE: clip normalization did not seem to have much effect

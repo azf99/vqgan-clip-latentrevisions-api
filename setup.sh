@@ -6,6 +6,7 @@ pip install kornia
 git clone https://github.com/openai/CLIP.git
 
 pip uninstall torchtext --yes
+pip install einops
 
 #cd /content/
 git clone https://github.com/CompVis/taming-transformers  
