@@ -2,7 +2,7 @@
 # TODO: Add all python dependencies in requirements.txt
 
 pip install --no-deps ftfy regex tqdm
-pip install kornia
+pip install kornia==0.5.4
 git clone https://github.com/openai/CLIP.git
 
 pip uninstall torchtext --yes

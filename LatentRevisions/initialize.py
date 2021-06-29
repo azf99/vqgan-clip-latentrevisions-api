@@ -1,3 +1,4 @@
+from LatentRevisions.imports import *
 from CLIP import clip
 perceptor, preprocess = clip.load('ViT-B/32', jit=False)
 perceptor.eval().requires_grad_(False);
@@ -11,6 +12,8 @@ scaler = 1
 import sys
 sys.path.append(".")
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+os.chdir("taming-transformers")
 
 import yaml
 import torch
@@ -51,6 +54,8 @@ def reconstruct_with_vqgan(x, model):
   print(f"VQGAN: latent shape: {z.shape[2:]}")
   xrec = model.decode(z)
   return xrec
+
+os.chdir("/content")
 
 config16384 = load_config("logs/vqgan_imagenet_f16_16384/configs/model.yaml", display=False)
 model16384 = load_vqgan(config16384, ckpt_path="logs/vqgan_imagenet_f16_16384/checkpoints/last.ckpt").to(DEVICE).eval().requires_grad_(False);

@@ -1,3 +1,5 @@
+import numpy as np
+from LatentRevisions.imports import *
 def displ(img, pre_scaled=True):
   img = np.array(img)[:,:,:]
   img = np.transpose(img, (1, 2, 0))

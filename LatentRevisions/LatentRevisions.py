@@ -1,15 +1,18 @@
-from LatentRevisions.imports import *
 from LatentRevisions.initialize import *
 from LatentRevisions.utils import *
+
+import numpy as np
 
 #. A detailed, high-quality photo without distortions
 text_other = '''incoherent, confusing, cropped, watermarks'''
 
 class Pars(torch.nn.Module):
-    def __init__(self, o_i2):
+    def __init__(self, o_i2, sideX, sideY):
         super(Pars, self).__init__()
+        self.sideX = sideX
+        self.sideY = sideY
         # if optional_path_to_a_starter_image != '':
-        self.normu = torch.nn.Parameter(o_i2.cuda().clone().view(batch_size, 256, self.sideX//16 * self.sideY//16))
+        self.normu = torch.nn.Parameter(o_i2.cuda().clone().view(1, 256, self.sideX//16 * self.sideY//16))
         # else:
         #   self.normu = .5*torch.randn(batch_size, 256, self.sideX//16 * self.sideY//16).cuda()
         #   self.normu = torch.nn.Parameter(torch.sinh(1.9*torch.arcsinh(self.normu)))
@@ -27,9 +30,9 @@ class Pars(torch.nn.Module):
       return normu.clip(-6, 6).view(1, -1, self.sideX//16, self.sideX//16)
 
 class LatentRevisions(object):
-    def __init__(self, text_input = "a beautiful person"):
+    def __init__(self, prompt):
         self.optional_path_to_a_starter_image = ''
-        self.text_input = text_input
+        self.text_input = prompt
         self.w0 = 5 
         self.text_to_add = "" 
         self.w1 = -0.1 
@@ -45,47 +48,47 @@ class LatentRevisions(object):
 
         with torch.no_grad():
             if self.optional_path_to_a_starter_image != '':
-            x = (torch.nn.functional.interpolate(torch.tensor(imageio.imread(self.optional_path_to_a_starter_image)).unsqueeze(0).permute(0, 3, 1, 2)[:,:3], (self.sideX, self.sideY)) / 255).cuda()
+              x = (torch.nn.functional.interpolate(torch.tensor(imageio.imread(self.optional_path_to_a_starter_image)).unsqueeze(0).permute(0, 3, 1, 2)[:,:3], (self.sideX, self.sideY)) / 255).cuda()
             else:
-            x = torch.nn.functional.interpolate(.5*torch.rand(size=(batch_size, 3, self.sideX//1, self.sideY//1)).cuda(), (self.sideX, self.sideY), mode='bilinear')
-            x = kornia.augmentation.GaussianBlur((7, 7), (14, 14), p=1)(x)
-            x = (x * 2 - 1)
-            self.o_i1 = model16384.encoder(x)
-            self.o_i2 = model16384.quant_conv(o_i1)
+              x = torch.nn.functional.interpolate(.5*torch.rand(size=(self.batch_size, 3, self.sideX//1, self.sideY//1)).cuda(), (self.sideX, self.sideY), mode='bilinear')
+              x = kornia.augmentation.GaussianBlur((7, 7), (14, 14), p=1)(x)
+              x = (x * 2 - 1)
+              self.o_i1 = model16384.encoder(x)
+              self.o_i2 = model16384.quant_conv(self.o_i1)
             # o_i3 = model16384.post_quant_conv(o_i2)
 
         #torch.cuda.empty_cache()
         self.dec = .1
 
-        self.lats = Pars(self.o_i2).cuda()
+        self.lats = Pars(self.o_i2, self.sideX, self.sideY).cuda()
         self.mapper = [self.lats.normu]
-        self.optimizer = torch.optim.AdamW([{'params': self.mapper, 'lr': .5}], weight_decay=dec)
+        self.optimizer = torch.optim.AdamW([{'params': self.mapper, 'lr': .5}], weight_decay=self.dec)
         self.eps = 0
 
         self.t = 0
-        if text_input != '':
+        if self.text_input != '':
             tx = clip.tokenize(self.text_input)
             self.t = perceptor.encode_text(tx.cuda()).detach().clone()
 
         self.text_add = 0
-        if text_to_add != '':
+        if self.text_to_add != '':
             self.text_add = clip.tokenize(text_to_add)
             self.text_add = perceptor.encode_text(self.text_add.cuda()).detach().clone()
 
         self.t_not = clip.tokenize(text_other)
-        self.t_not = perceptor.encode_text(t_not.cuda()).detach().clone()
+        self.t_not = perceptor.encode_text(self.t_not.cuda()).detach().clone()
 
 
         self.nom = torchvision.transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
 
         self.img_enc = 0
-        if img_enc_path != '':
+        if self.img_enc_path != '':
             self.img_enc = (torch.nn.functional.interpolate(torch.tensor(imageio.imread(self.img_enc_path)).unsqueeze(0).permute(0, 3, 1, 2), (224, 224)) / 255).cuda()[:,:3]
             self.img_enc = self.nom(self.img_enc)
             self.img_enc = perceptor.encode_image(self.img_enc.cuda()).detach().clone()
 
         self.ne_img_enc = 0
-        if ne_img_enc_path != '':
+        if self.ne_img_enc_path != '':
             self.ne_img_enc = (torch.nn.functional.interpolate(torch.tensor(imageio.imread(self.ne_img_enc_path)).unsqueeze(0).permute(0, 3, 1, 2), (224, 224)) / 255).cuda()[:,:3]
             self.ne_img_enc = self.nom(self.ne_img_enc)
             self.ne_img_enc = perceptor.encode_image(self.ne_img_enc.cuda()).detach().clone()
@@ -146,10 +149,10 @@ class LatentRevisions(object):
             ed = []
             zs = []
             for inx, kj in enumerate(drawn.view(-1, 1)):
-            if kj.sum() < 1:
-                zs.append(inx)
-            else:
-                ed.append(inx)
+              if kj.sum() < 1:
+                  zs.append(inx)
+              else:
+                  ed.append(inx)
 
             self.lats.ignore = torch.tensor(zs).cuda()
             self.lats.keep = self.lats.normu[:, :, self.lats.ignore].detach()
@@ -169,12 +172,12 @@ class LatentRevisions(object):
             size = int(torch.normal(1.2, .3, ()).clip(.43, 1.9) * self.sideX)
             
             if ch > cutn - 4:
-            size = int(self.sideX*1.4)
-            offsetx = torch.randint(0, int(self.sideX*2 - size), ())
-            offsety = torch.randint(0, int(self.sideX*2 - size), ())
-            apper = into[:, :, offsetx:offsetx + size, offsety:offsety + size]
-            apper = torch.nn.functional.interpolate(apper, (int(224*scaler), int(224*scaler)), mode='bilinear', align_corners=True)
-            p_s.append(apper)
+              size = int(self.sideX*1.4)
+              offsetx = torch.randint(0, int(self.sideX*2 - size), ())
+              offsety = torch.randint(0, int(self.sideX*2 - size), ())
+              apper = into[:, :, offsetx:offsetx + size, offsety:offsety + size]
+              apper = torch.nn.functional.interpolate(apper, (int(224*scaler), int(224*scaler)), mode='bilinear', align_corners=True)
+              p_s.append(apper)
         into = torch.cat(p_s, 0)
 
         into = into + self.up_noise*torch.rand((into.shape[0], 1, 1, 1)).cuda()*torch.randn_like(into, requires_grad=False)
@@ -188,26 +191,26 @@ class LatentRevisions(object):
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             ''')
-            alnot = (model(self.lats()).cpu().clip(-1, 1) + 1) / 2
+            alnot = (self.model(self.lats()).cpu().clip(-1, 1) + 1) / 2
             for allls in alnot.cpu():
-            displ(allls) #[:, int(.1*self.sideY):int(.9*self.sideY), int(.1*self.sideX):int(.9*self.sideX)]
-            display.display(display.Image(str(3)+'.png'))
-            print('\n')
+              displ(allls) #[:, int(.1*self.sideY):int(.9*self.sideY), int(.1*self.sideX):int(.9*self.sideX)]
+              display.display(display.Image(str(3)+'.png'))
+              print('\n')
         print('''
         ##########################################################
         ''', self.itt)
         #update_area_and_prompt(alnot)
 
         with torch.no_grad():
-            alnot = (model(self.lats()).cpu().clip(-1, 1) + 1) / 2
+            alnot = (self.model(self.lats()).cpu().clip(-1, 1) + 1) / 2
             
             for allls in alnot.cpu():
-            displ(allls) #[:, int(.1*self.sideY):int(.9*self.sideY), int(.1*self.sideX):int(.9*self.sideX)]
-            display.display(display.Image(str(3)+'.png'))
-            print('\n')
+              displ(allls) #[:, int(.1*self.sideY):int(.9*self.sideY), int(.1*self.sideX):int(.9*self.sideX)]
+              display.display(display.Image(str(3)+'.png'))
+              print('\n')
 
     def ascend_txt(self):
-        out = model(self.lats())
+        out = self.model(self.lats())
         into = self.augment((out.clip(-1, 1) + 1) / 2)
         into = self.nom(into)
         iii = perceptor.encode_image(into)
@@ -231,7 +234,7 @@ class LatentRevisions(object):
             print(loss1)
             print('up_noise', self.up_noise)
             for g in self.optimizer.param_groups:
-            print(g['lr'], 'lr', g['weight_decay'], 'decay')
+              print(g['lr'], 'lr', g['weight_decay'], 'decay')
 
         # if itt > 400:
         #   for g in optimizer.param_groups:
@@ -241,8 +244,8 @@ class LatentRevisions(object):
 
         if self.lats.keep_indices.size()[0] != 0:
             if torch.abs(self.lats().view(batch_size, 256, -1)[:, :, self.lats.keep_indices]).max() > 5:
-            for g in self.optimizer.param_groups:
+              for g in self.optimizer.param_groups:
                 g['weight_decay'] = self.dec
             else:
-            for g in self.optimizer.param_groups:
+              for g in self.optimizer.param_groups:
                 g['weight_decay'] = 0        
