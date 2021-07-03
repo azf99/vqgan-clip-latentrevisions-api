@@ -1,11 +1,11 @@
 # NOTE: Still for testing on Colab
 # TODO: Add all python dependencies in requirements.txt
 
-pip install --no-deps ftfy regex tqdm
-pip install kornia==0.5.4
-git clone https://github.com/openai/CLIP.git
+pip3 install --no-deps ftfy regex tqdm
+pip3 install kornia==0.5.4
+pip3 install https://github.com/openai/CLIP.git
 
-pip uninstall torchtext --yes
+pip3 uninstall torchtext --yes
 pip install einops
 
 #cd /content/
@@ -27,6 +27,6 @@ fi
 # !unzip /content/vq.zip -d /content/taming-transformers/logs/
 
 
-pip install omegaconf==2.0.0 pytorch-lightning==1.0.8
+pip3 install omegaconf==2.0.0 pytorch-lightning==1.0.8
 
 cd ..

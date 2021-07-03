@@ -95,7 +95,7 @@ class LatentRevisions(object):
 
         self.augs = torch.nn.Sequential(
             torchvision.transforms.RandomHorizontalFlip(),
-            torchvision.transforms.RandomAffine(24, (.1, .1), fill=0)
+            torchvision.transforms.RandomAffine(24, (.1, .1)) # , fill=0)
         ).cuda()
 
         self.up_noise = .11

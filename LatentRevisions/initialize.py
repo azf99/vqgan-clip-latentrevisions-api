@@ -1,7 +1,7 @@
 from LatentRevisions.imports import *
-from CLIP import clip
+import clip
 perceptor, preprocess = clip.load('ViT-B/32', jit=False)
-perceptor.eval().requires_grad_(False);
+perceptor.eval().requires_grad_(False)
 
 clip.available_models()
 
@@ -55,7 +55,7 @@ def reconstruct_with_vqgan(x, model):
   xrec = model.decode(z)
   return xrec
 
-os.chdir("/content")
+os.chdir("../")
 
-config16384 = load_config("logs/vqgan_imagenet_f16_16384/configs/model.yaml", display=False)
-model16384 = load_vqgan(config16384, ckpt_path="logs/vqgan_imagenet_f16_16384/checkpoints/last.ckpt").to(DEVICE).eval().requires_grad_(False);
+config16384 = load_config("./logs/vqgan_imagenet_f16_16384/configs/model.yaml", display=False)
+model16384 = load_vqgan(config16384, ckpt_path="./logs/vqgan_imagenet_f16_16384/checkpoints/last.ckpt").to(DEVICE).eval().requires_grad_(False);
