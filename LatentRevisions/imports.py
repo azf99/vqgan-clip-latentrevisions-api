@@ -15,7 +15,7 @@ import imageio
 
 import glob
 
-from google.colab import output
+#from google.colab import output
 
 from IPython import display
 from IPython.core.interactiveshell import InteractiveShell

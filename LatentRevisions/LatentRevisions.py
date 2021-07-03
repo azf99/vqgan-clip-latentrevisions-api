@@ -249,3 +249,8 @@ class LatentRevisions(object):
             else:
               for g in self.optimizer.param_groups:
                 g['weight_decay'] = 0        
+
+    def run():
+        while self.itt <= 100:
+            train(self.itt)
+            self.itt += 1

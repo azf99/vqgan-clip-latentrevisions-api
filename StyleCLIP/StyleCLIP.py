@@ -6,6 +6,7 @@ import torchvision
 import clip
 import numpy as np
 from PIL import Image
+import uuid
 
 from StyleCLIP.stylegan_models import g_all, g_synthesis, g_mapping
 from StyleCLIP.utils import GetFeatureMaps, transform_img, compute_loss
@@ -32,14 +33,14 @@ g_synthesis.to(device)
 
 class StyleCLIP(object):
     def __init__(self, output_path = './generations', prompt: str = "", img_path = None):
-      self.output_path = output_path
+      self.id = uuid.uuid4()
       self.batch_size = 1
       self.prompt = prompt
       self.lr = 1e-2
-      self.img_save_freq = 10
+      self.img_save_freq = 50
       self.ref_img_path = img_path
 
-      self.output_dir = os.path.join(output_path, f'"{prompt}"')
+      self.output_dir = output_path
 
       self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
       #print("USING ", self.device)
@@ -144,8 +145,8 @@ class StyleCLIP(object):
 
             if counter % self.img_save_freq == 0:
                 img = self.tensor_to_pil_img(img)
-                img.save(os.path.join(self.output_dir, f'{counter}.png'))
-                path_to_res = os.path.join(self.output_dir, f'{counter}.png')
+                img.save(os.path.join(self.output_dir, f"{self.id}.png"))
+                path_to_res = os.path.join(self.output_dir, f"{self.id}.png")
 
                 print(f'Step {counter}')
                 print(f'Loss {loss.data.cpu().numpy()[0][0]}')
