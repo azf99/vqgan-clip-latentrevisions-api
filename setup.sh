@@ -3,7 +3,7 @@
 
 pip3 install --no-deps ftfy regex tqdm
 pip3 install kornia==0.5.4
-pip3 install https://github.com/openai/CLIP.git
+pip3 install git+https://github.com/openai/CLIP.git
 
 pip3 uninstall torchtext --yes
 pip install einops
@@ -14,14 +14,15 @@ cd taming-transformers
 
 
 # download a VQGAN with a larger codebook (16384 entries)
-mkdir -p logs/vqgan_imagenet_f16_16384/checkpoints
-mkdir -p logs/vqgan_imagenet_f16_16384/configs
+echo "Downloading and saving VQGAN weights...."
+mkdir -p "./logs/vqgan_imagenet_f16_16384/checkpoints"
+mkdir -p "./logs/vqgan_imagenet_f16_16384/configs"
 
-if [ -z "$(ls -A logs/vqgan_imagenet_f16_16384/checkpoints/)" ]; then
-  wget 'https://heibox.uni-heidelberg.de/f/867b05fc8c4841768640/?dl=1' -O 'logs/vqgan_imagenet_f16_16384/checkpoints/last.ckpt' 
-  wget 'https://heibox.uni-heidelberg.de/f/274fb24ed38341bfa753/?dl=1' -O 'logs/vqgan_imagenet_f16_16384/configs/model.yaml' 
+if [ -z "$(ls -A ./logs/vqgan_imagenet_f16_16384/checkpoints/)" ]; then
+  wget 'https://heibox.uni-heidelberg.de/f/867b05fc8c4841768640/?dl=1' -O './logs/vqgan_imagenet_f16_16384/checkpoints/last.ckpt' 
+  wget 'https://heibox.uni-heidelberg.de/f/274fb24ed38341bfa753/?dl=1' -O './logs/vqgan_imagenet_f16_16384/configs/model.yaml' 
 fi
-
+echo "VQGAN weights saved...."
 
 # !cp /content/drive/MyDrive/vqgan_imagenet_f16_16384-20210325T002625Z-001.zip /content/vq.zip
 # !unzip /content/vq.zip -d /content/taming-transformers/logs/
