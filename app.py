@@ -4,6 +4,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import datetime
 import base64
+import time
 
 app = Flask(__name__)
 
@@ -31,16 +32,21 @@ def stype_clip():
     # check if reference image is given
     try:
         img = request.files["upload_file"]
-        filename = save_img("styleclip", file)
+        filename = save_img("styleclip", img)
     except Exception as e:
+        filename = None
         print(e)
     #prompt = 'An image with the face of a blonde woman with blonde hair and purple eyes'
-    model = StyleCLIP(prompt = prompt)
+    print("Prompt: ", prompt)
+
+    st = time.time()
+    model = StyleCLIP(prompt = prompt, img_path = filename)
     path = model.run()
 
     res = open(path, "rb")
-    encoded_image = base64.b64encode(res.read())
+    encoded_image = base64.b64encode(res.read()).decode("utf-8")
 
+    print("Time Taken:", time.time() - st)
     # return the generated image
     return jsonify({
         "status": "success",
@@ -57,3 +63,5 @@ def latent_revisions():
         "status": "success",
         "image": path
     })
+
+app.run("0.0.0.0", port = 80, threaded = False, debug = True)
