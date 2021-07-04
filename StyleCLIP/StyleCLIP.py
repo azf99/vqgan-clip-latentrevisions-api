@@ -32,8 +32,8 @@ g_synthesis.eval()
 g_synthesis.to(device)
 
 class StyleCLIP(object):
-    def __init__(self, output_path = './generations', prompt: str = "", img_path = None):
-      self.id = uuid.uuid4()
+    def __init__(self, output_path = './styleclip_out', prompt: str = "", img_path = None):
+      self.id = str(uuid.uuid4())
       self.batch_size = 1
       self.prompt = prompt
       self.lr = 1e-2

@@ -1,0 +1,4 @@
+HOST = "0.0.0.0"
+PORT = 80
+THREADED = False
+DEBUG = False

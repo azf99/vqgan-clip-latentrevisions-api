@@ -14,7 +14,9 @@ echo "VQGAN weights saved...."
 
 wget https://github.com/lernapparat/lernapparat/releases/download/v2019-02-01/karras2019stylegan-ffhq-1024x1024.for_g_all.pt
 
-pip3 install --no-deps ftfy regex tqdm
+sudo apt-get install redis
+
+pip3 install --no-deps ftfy regex tqdm redis
 pip3 install kornia==0.5.4
 pip3 install git+https://github.com/openai/CLIP.git
 

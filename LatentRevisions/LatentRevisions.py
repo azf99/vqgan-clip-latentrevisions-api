@@ -1,7 +1,9 @@
 from LatentRevisions.initialize import *
 from LatentRevisions.utils import *
 
+import os
 import numpy as np
+import uuid
 
 #. A detailed, high-quality photo without distortions
 text_other = '''incoherent, confusing, cropped, watermarks'''
@@ -30,7 +32,7 @@ class Pars(torch.nn.Module):
       return normu.clip(-6, 6).view(1, -1, self.sideX//16, self.sideX//16)
 
 class LatentRevisions(object):
-    def __init__(self, prompt):
+    def __init__(self, output_path = './latentrevisions_out', prompt):
         self.optional_path_to_a_starter_image = ''
         self.text_input = prompt
         self.w0 = 5 
@@ -40,6 +42,11 @@ class LatentRevisions(object):
         self.w2 = 1.2 
         self.ne_img_enc_path = ""
         self.w3 = 0.3
+        self.id = str(uuid.uuid4())
+        self.iter_limit = 100
+        self.output_dir = output_path
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)
 
         # How to weight the 2 texts (w0 and w1) and the images (w3 & w3)
         self.im_shape = [512, 512, 3]
@@ -99,68 +106,13 @@ class LatentRevisions(object):
         ).cuda()
 
         self.up_noise = .11
-        self.itt = 0
-
-        #with torch.no_grad():
-        #al = (model(self.lats()).cpu().clip(-1, 1) + 1) / 2
-        #for allls in al:
-        #    displ(allls[:3])
-        #    print('\n')
+        self.itt = 1
 
     def model(self, x):
-        # o_i1 = model16384.encoder(x)
-        # o_i1 = x
-        # o_i2 = model16384.quant_conv(o_i1)
         self.o_i2 = x
         self.o_i3 = model16384.post_quant_conv(self.o_i2)
         i = model16384.decoder(self.o_i3)
         return i
-
-    def update_area_and_prompt(self, latest):
-
-        print('''Input a new text_input prompt
-        or keep the same by leaving blank
-        then press Enter.''')
-        imeh = input()
-        if imeh != '':
-            tx = clip.tokenize(imeh)
-            self.t = perceptor.encode_text(tx.cuda()).detach().clone()
-        print('''Input the word "Draw" (or any other text) and press enter to go into revision mode to draw over which parts of the image should be optimized
-        or leave this input blank to continue with the currently selected area, then press enter.''')
-        inde = input()
-        if inde != '':
-            self.mapper = [self.lats.normu]
-            optimizer = torch.optim.AdamW([{'params': self.mapper, 'lr': .5}], weight_decay=self.dec)
-            
-            img = np.array(latest)[0,:,:,:]
-            img = np.transpose(img, (1, 2, 0))
-            imageio.imwrite('/content/here.jpg', np.array(img))
-
-            source = '/content/here.jpg'
-            npth = '/usr/local/share/jupyter/nbextensions/latest.jpg'
-            shutil.move(source, npth)
-
-            self.lats.normu.data = self.lats.normu.scatter(2, self.lats.ignore.unsqueeze(0).unsqueeze(0).expand(-1, 256, -1), self.lats.keep.detach())
-
-            _ = draw()
-
-            drawn = torch.nn.functional.interpolate(torch.tensor(imageio.imread('/content/drawing.png')).unsqueeze(0).permute(0, 3, 1, 2), (self.sideX//16, self.sideY//16), mode='nearest')[:,3:4,:,:]
-
-            ed = []
-            zs = []
-            for inx, kj in enumerate(drawn.view(-1, 1)):
-              if kj.sum() < 1:
-                  zs.append(inx)
-              else:
-                  ed.append(inx)
-
-            self.lats.ignore = torch.tensor(zs).cuda()
-            self.lats.keep = self.lats.normu[:, :, self.lats.ignore].detach()
-            self.lats.keep_indices = torch.tensor(ed).cuda()
-            if len(ed) > 0:
-                self.lats.normu.data[:, :, torch.tensor(ed).cuda()] = torch.randn_like(self.lats.normu.data[:, :, torch.tensor(ed).cuda()])
-        
-
 
     def augment(self, into, cutn=32):
         into = torch.nn.functional.pad(into, (self.sideX//2, self.sideX//2, self.sideX//2, self.sideX//2), mode='constant', value=0)
@@ -184,30 +136,18 @@ class LatentRevisions(object):
         return into
 
     def checkin(self):
-        #output.eval_js('new Audio("https://freesound.org/data/previews/80/80921_1022651-lq.ogg").play()')
         with torch.no_grad():
-            print('''
-            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            ''')
             alnot = (self.model(self.lats()).cpu().clip(-1, 1) + 1) / 2
             for allls in alnot.cpu():
-              displ(allls) #[:, int(.1*self.sideY):int(.9*self.sideY), int(.1*self.sideX):int(.9*self.sideX)]
-              display.display(display.Image(str(3)+'.png'))
-              print('\n')
-        print('''
-        ##########################################################
-        ''', self.itt)
-        #update_area_and_prompt(alnot)
+              self.displ(allls) #[:, int(.1*self.sideY):int(.9*self.sideY), int(.1*self.sideX):int(.9*self.sideX)]
 
-        with torch.no_grad():
-            alnot = (self.model(self.lats()).cpu().clip(-1, 1) + 1) / 2
-            
-            for allls in alnot.cpu():
-              displ(allls) #[:, int(.1*self.sideY):int(.9*self.sideY), int(.1*self.sideX):int(.9*self.sideX)]
-              display.display(display.Image(str(3)+'.png'))
-              print('\n')
+    def displ(self, img, pre_scaled=True):
+        img = np.array(img)[:,:,:]
+        img = np.transpose(img, (1, 2, 0))
+        if not pre_scaled:
+            img = scale(img, 48*4, 32*4)
+        self.output_path = os.path.join(self.output_dir, f"{self.id}.png")
+        imageio.imwrite(self.output_path, np.array(img))
 
     def ascend_txt(self):
         out = self.model(self.lats())
@@ -221,7 +161,7 @@ class LatentRevisions(object):
         return [0, -10*all_s + 5 * torch.cosine_similarity(self.t_not, iii, -1)]
         
     def train(self, i):
-        if self.itt % 100 == 0:
+        if self.itt % self.iter_limit == 0:
             self.checkin()
         loss1 = self.ascend_txt()
         loss = loss1[0] + loss1[1]
@@ -230,7 +170,7 @@ class LatentRevisions(object):
         loss.backward()
         self.optimizer.step()
         
-        if self.itt % 100 == 0:
+        if self.itt % self.iter_limit == 0:
             print(loss1)
             print('up_noise', self.up_noise)
             for g in self.optimizer.param_groups:
@@ -251,6 +191,7 @@ class LatentRevisions(object):
                 g['weight_decay'] = 0        
 
     def run(self):
-        while self.itt <= 100:
-            train(self.itt)
+        while self.itt <= self.iter_limit:
+            self.train(self.itt)
             self.itt += 1
+        return self.output_path

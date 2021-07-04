@@ -46,6 +46,8 @@ def stype_clip():
     res = open(path, "rb")
     encoded_image = base64.b64encode(res.read()).decode("utf-8")
 
+    del model
+
     print("Time Taken:", time.time() - st)
     # return the generated image
     return jsonify({
@@ -56,12 +58,33 @@ def stype_clip():
 @app.route('/latent_revision', methods = ["POST"])
 def latent_revisions():
     prompt = request.form["prompt"]
+    # check if reference image is given
+    try:
+        img = request.files["upload_file"]
+        filename = save_img("latent_revisions", img)
+    except Exception as e:
+        filename = None
+        print(e)
+    #prompt = 'An image with the face of a blonde woman with blonde hair and purple eyes'
+    print("Prompt: ", prompt)
+
+    st = time.time()
     #prompt = 'A beautiful person'
     model = LatentRevisions(prompt = prompt)
     path = model.run()
+    
+    res = open(path, "rb")
+    encoded_image = base64.b64encode(res.read()).decode("utf-8")
+
+    del model
+
+    print("Time Taken:", time.time() - st)
+    # return the generated image
     return jsonify({
         "status": "success",
-        "image": path
+        "image": encoded_image
     })
 
-app.run("0.0.0.0", port = 80, threaded = False, debug = True)
+import app_config
+
+app.run(app_config.HOST, port = app_config.PORT, threaded = app_config.THREADED, debug = app_config.DEBUG)
