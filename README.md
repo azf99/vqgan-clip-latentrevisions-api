@@ -19,4 +19,4 @@ A single process takes up 90%+ processing power of the GPU, so it is recommended
 * StyleCLIP: The model is run for 50 iterations, which takes 8-10 seconds to finish per call. First inference is always 20+ seconds.
 
 ### TODOS 
-* Add input weights, extra text prompts, and started images for LatentRevisions
+* Add input weights, extra text prompts, and starter images for LatentRevisions
