@@ -32,7 +32,7 @@ class Pars(torch.nn.Module):
       return normu.clip(-6, 6).view(1, -1, self.sideX//16, self.sideX//16)
 
 class LatentRevisions(object):
-    def __init__(self, output_path = './latentrevisions_out', prompt):
+    def __init__(self, prompt, output_path = './latentrevisions_out'):
         self.optional_path_to_a_starter_image = ''
         self.text_input = prompt
         self.w0 = 5 

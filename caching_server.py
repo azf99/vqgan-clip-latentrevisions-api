@@ -1,13 +1,13 @@
 import requests
 import json
-
+import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import datetime
 import base64
 import uuid
 import time
-import caching_config import *
+from caching_config import *
 
 server = Flask(__name__)
 
@@ -18,9 +18,9 @@ UPLOAD_FOLDER = "UPLOAD_FOLDER/"
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-def save_img(label, file):
+def save_img(label, file, uid):
     #current_time = str(datetime.datetime.now()).replace('-', '_').replace(':', '_')
-    filename = UPLOAD_FOLDER + label + uuid.uuid4() + ".png"
+    filename = UPLOAD_FOLDER + label + uid + ".png"
     file.save(filename)
     return(filename)
 
@@ -30,11 +30,12 @@ def hello_world():
 
 @server.route('/styleclip', methods = ["POST"])
 def stype_clip():
+    k = str(uuid.uuid4())
     prompt = request.form["prompt"]
     # check if reference image is given
     try:
         img = request.files["upload_file"]
-        filename = save_img("styleclip", img)
+        filename = save_img("styleclip", img, k)
     except Exception as e:
         filename = None
         print(e)
@@ -45,21 +46,20 @@ def stype_clip():
     print("Prompt: ", prompt)
 
     #st = time.time()
-    k = str(uuid.uuid4())
-	d = {"id": k, "image": filename, "prompt": prompt}
-	db.rpush(STYLECLIP_QUEUE, json.dumps(d))
+    d = {"id": k, "image": filename, "prompt": prompt}
+    db.rpush(STYLECLIP_QUEUE, json.dumps(d))
 
     # keep looping until our model server returns the output
-	# predictions
-	while True:
-		# attempt to grab the output predictions
-		output = db.get(k)
-		if output is not None:
-			# delete the result from the database and break from the polling loop
-			db.delete(k)
-			break
-		# sleep for a small amount to give the model a chance to process the input image
-		time.sleep(CLIENT_SLEEP)
+    # predictions
+    while True:
+        # attempt to grab the output predictions
+        output = db.get(k)
+        if output is not None:
+            # delete the result from the database and break from the polling loop
+            db.delete(k)
+            break
+        # sleep for a small amount to give the model a chance to process the input image
+        time.sleep(CLIENT_SLEEP)
     res = open(output, "rb")
     encoded_image = base64.b64encode(res.read()).decode("utf-8")
 
@@ -75,11 +75,12 @@ def latent_revisions():
     """
     TODO: Add other images and weights
     """
+    k = str(uuid.uuid4())
     prompt = request.form["prompt"]
     # check if reference image is given
     try:
         img = request.files["upload_file"]
-        filename = save_img("latentrevisions", img)
+        filename = save_img("latentrevisions", img, k)
     except Exception as e:
         filename = None
         print(e)
@@ -90,21 +91,20 @@ def latent_revisions():
     print("Prompt: ", prompt)
 
     #st = time.time()
-    k = str(uuid.uuid4())
-	d = {"id": k, "image": filename, "prompt": prompt}
-	db.rpush(LATENTREVISIONS_QUEUE, json.dumps(d))
+    d = {"id": k, "image": filename, "prompt": prompt}
+    db.rpush(LATENTREVISIONS_QUEUE, json.dumps(d))
 
     # keep looping until our model server returns the output
-	# predictions
-	while True:
-		# attempt to grab the output predictions
-		output = db.get(k)
-		if output is not None:
-			# delete the result from the database and break from the polling loop
-			db.delete(k)
-			break
-		# sleep for a small amount to give the model a chance to process the input image
-		time.sleep(CLIENT_SLEEP)
+    # predictions
+    while True:
+        # attempt to grab the output predictions
+        output = db.get(k)
+        if output is not None:
+            # delete the result from the database and break from the polling loop
+            db.delete(k)
+            break
+        # sleep for a small amount to give the model a chance to process the input image
+        time.sleep(CLIENT_SLEEP)
     res = open(output, "rb")
     encoded_image = base64.b64encode(res.read()).decode("utf-8")
 

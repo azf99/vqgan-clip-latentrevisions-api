@@ -2,55 +2,56 @@ from StyleCLIP.StyleCLIP import *
 from LatentRevisions.LatentRevisions import *
 from caching_config import *
 import time
+import json
 from threading import Thread
 
-def StyleCLP_Thread():
-    	# continually pool for new images to process
-	while True:
-		# attempt to grab an image from the database
-		req = db.lpop(STYLECLIP_QUEUE, 0)
-        if req is None:
-            time.sleep(1.0)
-            continue
+def StyleCLIP_Thread():
+        # continually pool for new images to process
+        while True:
+            # attempt to grab an image from the database
+            req = db.lpop(STYLECLIP_QUEUE)
+            if req == None:
+                time.sleep(SERVER_SLEEP)
+                continue
+            q = json.loads(req)
 
-		q = json.loads(req)
-
-        model = StyleCLIP(prompt = q["prompt"], img_path = q["image"])
-        out_path = model.run()
-        print("Processed id: ", d["id"], " Saved at out_path: ", out_path)
-        db.set(q["id"], out_path)
+            model = StyleCLIP(prompt = q["prompt"], img_path = q["image"])
+            out_path = model.run()
+            print("Processed id: ", q["id"], " Saved at out_path: ", out_path)
+            db.set(q["id"], out_path)
 
 def LatentRevisions_Thread():
-    	# continually pool for new images to process
-	while True:
-		# attempt to grab an image from the database
-		req = db.lpop(STYLECLIP_QUEUE, 0)
-        if req is None:
-            time.sleep(1.0)
-            continue
+        # continually pool for new images to process
+        while True:
+            # attempt to grab an image from the database
+            req = db.lpop(LATENTREVISIONS_QUEUE)
+            if req == None:
+                time.sleep(SERVER_SLEEP)
+                continue
 
-		q = json.loads(req)
+            q = json.loads(req)
 
-        model = LatentRevisions(prompt = q["prompt"])
-        out_path = model.run()
-        print("Processed id: ", d["id"], " Saved at out_path: ", out_path)
-        db.set(q["id"], out_path)
+            model = LatentRevisions(prompt = q["prompt"])
+            out_path = model.run()
+            print("Processed id: ", q["id"], " Saved at out_path: ", out_path)
+            db.set(q["id"], out_path)
 
 if __name__ == "__main__":
     lv = []
     tsc = []
     for i in range(NUM_THREADS):
-        t = Thread(target = StyleCLP_Thread)
+        t = Thread(target = StyleCLIP_Thread)
         t.start()
         tsc.append(t)
-    
+    print("Started StyleCLIP")
+
     for i in range(NUM_THREADS):
         t = Thread(target = LatentRevisions_Thread)
         t.start()
         lv.append(t)
-    
+    print("Started LatenRevisions....")
     for i in tsc:
         i.join()
-    
+
     for i in lv:
         i.join()
