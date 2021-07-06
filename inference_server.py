@@ -39,13 +39,13 @@ def LatentRevisions_Thread():
 if __name__ == "__main__":
     lv = []
     tsc = []
-    for i in range(NUM_THREADS):
+    for i in range(STYLECLIP_THREADS):
         t = Thread(target = StyleCLIP_Thread)
         t.start()
         tsc.append(t)
     print("Started StyleCLIP")
 
-    for i in range(NUM_THREADS):
+    for i in range(LATENTREVISIONS_THREADS):
         t = Thread(target = LatentRevisions_Thread)
         t.start()
         lv.append(t)

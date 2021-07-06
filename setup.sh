@@ -16,8 +16,8 @@ wget https://github.com/lernapparat/lernapparat/releases/download/v2019-02-01/ka
 
 sudo apt-get install redis
 
-pip3 install --no-deps ftfy regex tqdm redis flask flask_cors
-pip3 install kornia==0.5.4
+pip3 install --no-deps ftfy regex tqdm redis
+pip3 install kornia==0.5.4 flask flask_cors
 pip3 install git+https://github.com/openai/CLIP.git
 
 pip3 uninstall torchtext --yes

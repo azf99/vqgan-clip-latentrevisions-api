@@ -1,5 +1,8 @@
 # mead-backend
 
+NOTE: All this should be done under the `pytorch_latest_p37` environment on the EC2 Instance.
+It can be activated by running `conda activate pytorch_latest_p37`
+
 ### Instructions for Installation
 1. Clone this repository.
 2. `cd mead-backend`
