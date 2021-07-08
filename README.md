@@ -14,6 +14,28 @@ It can be activated by running `conda activate pytorch_latest_p37`
 * [`inference_server.py`](inference_server.py): This file runs threads for inferencing from images from the redis queue. This runs multiple threads for both StyleCLIP and LatentRevisions. The number of threads can be defined in the [`caching_config.py`](caching_config.py). Max possible thhreads without causing CUDA OOM errors on a single Tesla T4 are already defined in the file.
 * [`caching_server.py`](caching_server.py): Run this server after running [`inference_server.py`](inference_server.py). This is also a Flask app with endpoints for both the models. This is a threaded application and pushes all the incoming images in the Redis queue.
 
+### Input POST request format for LatentRevisions
+The request should have these in the form attributes:
+accessible using `request.form` in `flask`
+{
+"prompt": "",   # mandatory
+"w0": 5,        #weight for prompt
+
+# OPTIONAL
+"text_to_add": "", 
+"w1": 0,        # weight for "text_to_add"
+"w2": 0,    weight for "img_enc"
+"w3": 0     # weight "ne_img_enc"
+}
+
+FILES(OPTIONAL) accessible using `request.files` in `flask`: 
+"img": "",      # starter image
+"img_enc": "",  # image
+"ne_img_enc": "", # negative image
+        
+
+
+
 ![Architecture](architecture.jpeg)
 
 ### Performance

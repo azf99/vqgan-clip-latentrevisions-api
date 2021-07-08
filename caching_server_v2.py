@@ -19,7 +19,7 @@ def parse_LatentRevisions(req, key):
     data = {
         "prompt": "",
         "output_path": "./latentrevisions_out",
-        "img": "",
+        "img": '',
         "w0": 5,
         "text_to_add": "",
         "w1": 0,
@@ -58,72 +58,95 @@ def stype_clip():
     prompt = request.form["prompt"]
     # check if reference image is given
     try:
-        img = request.files["img"]
+        img = request.files["upload_file"]
         filename = save_img("styleclip", img, k)
     except Exception as e:
         filename = None
         print(e)
         return jsonify({
-            "status": "Error. File type not proper."
+            "status": "error",
+            "message": "file type not proper"
         }), 400
     #prompt = 'An image with the face of a blonde woman with blonde hair and purple eyes'
     print("Prompt: ", prompt)
 
     #st = time.time()
-    d = {"id": k, "image": filename, "prompt": prompt}
-    db.rpush(STYLECLIP_QUEUE, json.dumps(d))
+    d = {"image_path": filename, "prompt": prompt, "type": "sc"}
+    db.set(k, json.dumps(d))
 
-    # keep looping until our model server returns the output
-    # predictions
-    while True:
-        # attempt to grab the output predictions
-        output = db.get(k)
-        if output is not None:
-            # delete the result from the database and break from the polling loop
-            db.delete(k)
-            break
-        # sleep for a small amount to give the model a chance to process the input image
-        time.sleep(CLIENT_SLEEP)
-    res = open(output, "rb")
-    encoded_image = base64.b64encode(res.read()).decode("utf-8")
+    db.rpush(STYLECLIP_QUEUE, k)
 
     #print("Time Taken:", time.time() - st)
     # return the generated image
     return jsonify({
         "status": "success",
-        "image": encoded_image
+        "message": "upload successful",
+        "id": k
     })
 
 @server.route('/latent_revision', methods = ["POST"])
 def latent_revisions():
+    """
+    TODO: Add other images and weights
+    """
     k = str(uuid.uuid4())
     d = parse_LatentRevisions(request, key)
     #prompt = 'An image with the face of a blonde woman with blonde hair and purple eyes'
     print("Prompt: ", d["prompt"])
 
+    #d = {"image_path": filename, "prompt": prompt, "type": "lr"}
+    d.update("type", "lr")
+    db.set(k, json.dumps(d))
+
     #st = time.time()
-    #d = {"id": k, "image": filename, "prompt": prompt}
-    db.rpush(LATENTREVISIONS_QUEUE, json.dumps(d))
-
-    # keep looping until our model server returns the output
-    # predictions
-    while True:
-        # attempt to grab the output predictions
-        output = db.get(k)
-        if output is not None:
-            # delete the result from the database and break from the polling loop
-            db.delete(k)
-            break
-        # sleep for a small amount to give the model a chance to process the input image
-        time.sleep(CLIENT_SLEEP)
-    res = open(output, "rb")
-    encoded_image = base64.b64encode(res.read()).decode("utf-8")
-
+    db.rpush(LATENTREVISIONS_QUEUE, k)
     #print("Time Taken:", time.time() - st)
     # return the generated image
     return jsonify({
         "status": "success",
-        "image": encoded_image
+        "message": "upload successful",
+        "id": k
     })
+
+@server.route('/check', methods = ["POST"])
+def check():
+    """
+    check rank and get result
+    """
+    key = request.form["id"]
+
+    item = json.loads(db.get(key))
+
+    if item == None:
+        return jsonify({
+            "status": "error",
+            "message": "is does not exist"
+        })
+    else:
+        if "out_path" in item.keys():
+            res = open(item["out_path"], "rb")
+            encoded_image = base64.b64encode(res.read()).decode("utf-8")
+            return jsonify({
+                    "status": "success",
+                    "image": encoded_image
+                })
+        elif "prompt" in item.keys():
+            pos = 0
+            if item["type"] == "lr":
+                pos = db.lpos(LATENTREVISIONS_QUEUE, key)
+            else:
+                pos = db.lpos(STYLECLIP_QUEUE, key)
+            return jsonify({
+                "status": "processing",
+                "id": key,
+                "rank": pos
+            })
+        elif "status" in item.keys():
+            return jsonify({
+                "status": "processing",
+                "id": key,
+                "rank": 0
+            })
+    
 
 server.run(HOST, port = PORT, threaded = THREADED, debug = DEBUG)

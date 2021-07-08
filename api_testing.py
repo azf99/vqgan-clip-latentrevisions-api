@@ -9,7 +9,7 @@ d = {
 
 input_image = "test/test.jpeg"
 
-res = requests.post(path, data = d, files = {"upload_file": open(input_image, "rb").read()})
+res = requests.post(path, data = d, files = {"img": open(input_image, "rb").read()})
 
 from threading import Thread
 import time
@@ -17,7 +17,7 @@ results = []
 
 def make_call(data):
     st = time.time()
-    res = requests.post(path, data = d, files = {"upload_file": open(input_image, "rb").read()})
+    res = requests.post(path, data = d, files = {"img": open(input_image, "rb").read()})
     results.append(res.json())
     print("Received", time.time() - st)
 

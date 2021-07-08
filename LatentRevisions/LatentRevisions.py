@@ -32,16 +32,27 @@ class Pars(torch.nn.Module):
       return normu.clip(-6, 6).view(1, -1, self.sideX//16, self.sideX//16)
 
 class LatentRevisions(object):
-    def __init__(self, prompt, output_path = './latentrevisions_out'):
-        self.optional_path_to_a_starter_image = ''
+    def __init__(self, 
+                prompt,
+                output_path = './latentrevisions_out',
+                img_path = '',
+                w0 = 5,
+                text_to_add = "",
+                w1 = 0,
+                img_enc_path = "",
+                w2 = 0,
+                ne_img_enc_path = "",
+                w3 = 0
+                ):
+        self.optional_path_to_a_starter_image = img_path
         self.text_input = prompt
-        self.w0 = 5 
-        self.text_to_add = "" 
-        self.w1 = -0.1 
-        self.img_enc_path = ""
-        self.w2 = 1.2 
-        self.ne_img_enc_path = ""
-        self.w3 = 0.3
+        self.w0 = w0
+        self.text_to_add = text_to_add
+        self.w1 = w1
+        self.img_enc_path = img_enc_path
+        self.w2 = w2
+        self.ne_img_enc_path = ne_img_enc_path
+        self.w3 = w3
         self.id = str(uuid.uuid4())
         self.iter_limit = 100
         self.output_dir = output_path
@@ -79,7 +90,7 @@ class LatentRevisions(object):
 
         self.text_add = 0
         if self.text_to_add != '':
-            self.text_add = clip.tokenize(text_to_add)
+            self.text_add = clip.tokenize(self.text_to_add)
             self.text_add = perceptor.encode_text(self.text_add.cuda()).detach().clone()
 
         self.t_not = clip.tokenize(text_other)

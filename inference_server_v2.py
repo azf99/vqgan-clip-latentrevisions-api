@@ -13,12 +13,16 @@ def StyleCLIP_Thread():
             if req == None:
                 time.sleep(SERVER_SLEEP)
                 continue
-            q = json.loads(req)
-            key = q.pop("id")
-            model = StyleCLIP(prompt = q["prompt"], img_path = q["image"])
+            q = json.loads(db.get(req))
+            
+            db.set(req, json.dumps({"status": "processing"}))
+
+            model = StyleCLIP(prompt = q["prompt"], img_path = q["image_path"])
             out_path = model.run()
-            print("Processed id: ", key, " Saved at out_path: ", out_path)
-            db.set(key, out_path)
+            print("Processed id: ", req, " Saved at out_path: ", out_path)
+            
+            out = {"out_path": out_path}
+            db.set(req, json.dumps(out))
 
 def LatentRevisions_Thread():
         # continually pool for new images to process
@@ -29,12 +33,17 @@ def LatentRevisions_Thread():
                 time.sleep(SERVER_SLEEP)
                 continue
 
-            q = json.loads(req)
-            key = q.pop("id")
+            q = json.loads(db.get(req))
+
+            db.set(req, json.dumps({"status": "processing"}))
+            q.pop("type")
+
             model = LatentRevisions(**q)
             out_path = model.run()
-            print("Processed id: ", key, " Saved at out_path: ", out_path)
-            db.set(key, out_path)
+            print("Processed id: ", req, " Saved at out_path: ", out_path)
+
+            out = {"out_path": out_path}
+            db.set(req, json.dumps(out))
 
 if __name__ == "__main__":
     lv = []
