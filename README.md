@@ -17,6 +17,7 @@ It can be activated by running `conda activate pytorch_latest_p37`
 ### Input POST request format for LatentRevisions
 The request should have these in the form attributes:
 accessible using `request.form` in `flask`
+```json
 {
 "prompt": "",   # mandatory
 "w0": 5,        #weight for prompt
@@ -28,11 +29,11 @@ accessible using `request.form` in `flask`
 "w3": 0     # weight "ne_img_enc"
 }
 
-FILES(OPTIONAL) accessible using `request.files` in `flask`: 
+FILES(OPTIONAL) accessible using request.files in flask: 
 "img": "",      # starter image
 "img_enc": "",  # image
 "ne_img_enc": "", # negative image
-        
+```
 
 
 
