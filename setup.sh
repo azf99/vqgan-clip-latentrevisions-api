@@ -14,6 +14,7 @@ echo "VQGAN weights saved...."
 
 wget https://github.com/lernapparat/lernapparat/releases/download/v2019-02-01/karras2019stylegan-ffhq-1024x1024.for_g_all.pt
 
+sudo add-apt-repository ppa:redislabs/redis
 sudo apt update
 sudo apt-get install redis
 
@@ -22,7 +23,7 @@ pip3 install kornia==0.5.4 flask flask_cors redis
 pip3 install git+https://github.com/openai/CLIP.git
 
 pip3 uninstall torchtext --yes
-pip3 install einops
+pip3 install einops==0.3.0 
 
 #cd /content/
 git clone https://github.com/CompVis/taming-transformers  

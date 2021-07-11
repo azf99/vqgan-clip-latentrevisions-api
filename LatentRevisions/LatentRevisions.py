@@ -66,13 +66,13 @@ class LatentRevisions(object):
 
         with torch.no_grad():
             if self.optional_path_to_a_starter_image != '':
-              x = (torch.nn.functional.interpolate(torch.tensor(imageio.imread(self.optional_path_to_a_starter_image)).unsqueeze(0).permute(0, 3, 1, 2)[:,:3], (self.sideX, self.sideY)) / 255).cuda()
+                x = (torch.nn.functional.interpolate(torch.tensor(imageio.imread(self.optional_path_to_a_starter_image)).unsqueeze(0).permute(0, 3, 1, 2)[:,:3], (self.sideX, self.sideY)) / 255).cuda()
             else:
-              x = torch.nn.functional.interpolate(.5*torch.rand(size=(self.batch_size, 3, self.sideX//1, self.sideY//1)).cuda(), (self.sideX, self.sideY), mode='bilinear')
-              x = kornia.augmentation.GaussianBlur((7, 7), (14, 14), p=1)(x)
-              x = (x * 2 - 1)
-              self.o_i1 = model16384.encoder(x)
-              self.o_i2 = model16384.quant_conv(self.o_i1)
+                x = torch.nn.functional.interpolate(.5*torch.rand(size=(self.batch_size, 3, self.sideX//1, self.sideY//1)).cuda(), (self.sideX, self.sideY), mode='bilinear')
+                x = kornia.augmentation.GaussianBlur((7, 7), (14, 14), p=1)(x)
+                x = (x * 2 - 1)
+            self.o_i1 = model16384.encoder(x)
+            self.o_i2 = model16384.quant_conv(self.o_i1)
             # o_i3 = model16384.post_quant_conv(o_i2)
 
         #torch.cuda.empty_cache()

@@ -16,9 +16,8 @@ CORS(server)
 UPLOAD_FOLDER = "UPLOAD_FOLDER/"
 
 def parse_LatentRevisions(req, key):
-    data = {
+    schema = {
         "prompt": "",
-        "output_path": "./latentrevisions_out",
         "img": "",
         "w0": 5,
         "text_to_add": "",
@@ -28,15 +27,15 @@ def parse_LatentRevisions(req, key):
         "ne_img_enc": "",
         "w3": 0
     }
-    for i in data.keys():
+    data = {}
+    for i in schema.keys():
         if (i in req.form.keys()) and ("img" not in i):
-            data.update(i, req.form[i])
+            data.update({i: req.form[i]})
         elif (i in req.files.keys()) and ("img" in i):
             img = req.files[i]
             filename = save_img("latentrevisions", img, key + i)
-            data.pop(i)
-            data.update(i + "_path", filename)
-    data.update("id", key)
+            data.update({i + "_path": filename})
+    data.update({"id": key})
     return data
 
 if not os.path.exists(UPLOAD_FOLDER):
@@ -97,7 +96,7 @@ def stype_clip():
 @server.route('/latent_revision', methods = ["POST"])
 def latent_revisions():
     k = str(uuid.uuid4())
-    d = parse_LatentRevisions(request, key)
+    d = parse_LatentRevisions(request, k)
     #prompt = 'An image with the face of a blonde woman with blonde hair and purple eyes'
     print("Prompt: ", d["prompt"])
 
