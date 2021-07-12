@@ -13,7 +13,7 @@ server = Flask(__name__)
 
 CORS(server)
 
-UPLOAD_FOLDER = "UPLOAD_FOLDER/"
+UPLOAD_FOLDER = "./UPLOAD_FOLDER/"
 
 def parse_LatentRevisions(req, key):
     schema = {
@@ -43,7 +43,7 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 def save_img(label, file, uid):
     #current_time = str(datetime.datetime.now()).replace('-', '_').replace(':', '_')
-    filename = UPLOAD_FOLDER + label + uid + ".png"
+    filename = UPLOAD_FOLDER + label + uid + ".jpg"
     file.save(filename)
     return(filename)
 
@@ -98,7 +98,7 @@ def latent_revisions():
     k = str(uuid.uuid4())
     d = parse_LatentRevisions(request, k)
     #prompt = 'An image with the face of a blonde woman with blonde hair and purple eyes'
-    print("Prompt: ", d["prompt"])
+    print("Prompt: ", d)
 
     #st = time.time()
     #d = {"id": k, "image": filename, "prompt": prompt}

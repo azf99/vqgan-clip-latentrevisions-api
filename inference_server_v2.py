@@ -14,13 +14,13 @@ def StyleCLIP_Thread():
                 time.sleep(SERVER_SLEEP)
                 continue
             q = json.loads(db.get(req))
-            
+
             db.set(req, json.dumps({"status": "processing"}))
 
             model = StyleCLIP(prompt = q["prompt"], img_path = q["image_path"])
             out_path = model.run()
             print("Processed id: ", req, " Saved at out_path: ", out_path)
-            
+
             out = {"out_path": out_path}
             db.set(req, json.dumps(out))
 
@@ -37,6 +37,7 @@ def LatentRevisions_Thread():
 
             db.set(req, json.dumps({"status": "processing"}))
             q.pop("type")
+            q.pop("id")
 
             model = LatentRevisions(**q)
             out_path = model.run()

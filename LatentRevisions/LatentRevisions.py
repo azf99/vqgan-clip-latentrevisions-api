@@ -32,7 +32,7 @@ class Pars(torch.nn.Module):
       return normu.clip(-6, 6).view(1, -1, self.sideX//16, self.sideX//16)
 
 class LatentRevisions(object):
-    def __init__(self, 
+    def __init__(self,
                 prompt,
                 output_path = './latentrevisions_out',
                 img_path = '',
@@ -133,7 +133,7 @@ class LatentRevisions(object):
         for ch in range(cutn):
             # size = torch.randint(int(.5*self.sideX), int(1.9*self.sideX), ())
             size = int(torch.normal(1.2, .3, ()).clip(.43, 1.9) * self.sideX)
-            
+
             if ch > cutn - 4:
               size = int(self.sideX*1.4)
               offsetx = torch.randint(0, int(self.sideX*2 - size), ())
@@ -170,7 +170,7 @@ class LatentRevisions(object):
         all_s = torch.cosine_similarity(q, iii, -1)
         # all_s = torch.arccos(0 - all_s) / np.pi
         return [0, -10*all_s + 5 * torch.cosine_similarity(self.t_not, iii, -1)]
-        
+
     def train(self, i):
         if self.itt % self.iter_limit == 0:
             self.checkin()
@@ -180,7 +180,7 @@ class LatentRevisions(object):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        
+
         if self.itt % self.iter_limit == 0:
             print(loss1)
             print('up_noise', self.up_noise)
@@ -199,7 +199,7 @@ class LatentRevisions(object):
                 g['weight_decay'] = self.dec
             else:
               for g in self.optimizer.param_groups:
-                g['weight_decay'] = 0        
+                g['weight_decay'] = 0
 
     def run(self):
         while self.itt <= self.iter_limit:

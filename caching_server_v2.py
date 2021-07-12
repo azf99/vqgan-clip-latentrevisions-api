@@ -13,7 +13,7 @@ server = Flask(__name__)
 
 CORS(server)
 
-UPLOAD_FOLDER = "UPLOAD_FOLDER/"
+UPLOAD_FOLDER = "./UPLOAD_FOLDER/"
 
 def parse_LatentRevisions(req, key):
     schema = {
@@ -43,7 +43,7 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 def save_img(label, file, uid):
     #current_time = str(datetime.datetime.now()).replace('-', '_').replace(':', '_')
-    filename = UPLOAD_FOLDER + label + uid + ".png"
+    filename = UPLOAD_FOLDER + label + uid + ".jpg"
     file.save(filename)
     return(filename)
 
@@ -57,7 +57,7 @@ def stype_clip():
     prompt = request.form["prompt"]
     # check if reference image is given
     try:
-        img = request.files["upload_file"]
+        img = request.files["img"]
         filename = save_img("styleclip", img, k)
     except Exception as e:
         filename = None
@@ -89,12 +89,12 @@ def latent_revisions():
     TODO: Add other images and weights
     """
     k = str(uuid.uuid4())
-    d = parse_LatentRevisions(request, key)
+    d = parse_LatentRevisions(request, k)
     #prompt = 'An image with the face of a blonde woman with blonde hair and purple eyes'
     print("Prompt: ", d["prompt"])
 
     #d = {"image_path": filename, "prompt": prompt, "type": "lr"}
-    d.update("type", "lr")
+    d.update({"type": "lr"})
     db.set(k, json.dumps(d))
 
     #st = time.time()
@@ -132,9 +132,9 @@ def check():
         elif "prompt" in item.keys():
             pos = 0
             if item["type"] == "lr":
-                pos = db.lpos(LATENTREVISIONS_QUEUE, key)
+                pos = db.execute_command("LPOS " + LATENTREVISIONS_QUEUE + " " + key)
             else:
-                pos = db.lpos(STYLECLIP_QUEUE, key)
+                pos = db.execute_command("LPOS " + STYLECLIP_QUEUE + " " + key)
             return jsonify({
                 "status": "processing",
                 "id": key,
@@ -146,6 +146,6 @@ def check():
                 "id": key,
                 "rank": 0
             })
-    
+
 
 server.run(HOST, port = PORT, threaded = THREADED, debug = DEBUG)

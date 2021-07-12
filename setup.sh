@@ -1,6 +1,3 @@
-# NOTE: Still for testing on Colab
-# TODO: Add all python dependencies in requirements.txt
-
 # download a VQGAN with a larger codebook (16384 entries)
 echo "Downloading and saving VQGAN weights...."
 mkdir -p "./logs/vqgan_imagenet_f16_16384/checkpoints"
@@ -14,16 +11,13 @@ echo "VQGAN weights saved...."
 
 wget https://github.com/lernapparat/lernapparat/releases/download/v2019-02-01/karras2019stylegan-ffhq-1024x1024.for_g_all.pt
 
-sudo add-apt-repository ppa:redislabs/redis
+#sudo add-apt-repository ppa:redislabs/redis
 sudo apt update
-sudo apt-get install redis
+sudo apt-get install -y redis
 
-pip3 install --no-deps ftfy regex tqdm 
-pip3 install kornia==0.5.4 flask flask_cors redis
 pip3 install git+https://github.com/openai/CLIP.git
-
+pip3 install requirements.txt
 pip3 uninstall torchtext --yes
-pip3 install einops==0.3.0 
 
 #cd /content/
 git clone https://github.com/CompVis/taming-transformers  
@@ -33,6 +27,6 @@ cd taming-transformers
 # !unzip /content/vq.zip -d /content/taming-transformers/logs/
 
 
-pip3 install omegaconf==2.0.0 pytorch-lightning==1.0.8
+#pip3 install omegaconf==2.0.0 pytorch-lightning==1.0.8
 
 cd ..
