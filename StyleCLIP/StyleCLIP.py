@@ -7,6 +7,7 @@ import clip
 import numpy as np
 from PIL import Image
 import uuid
+import json
 
 from StyleCLIP.stylegan_models import g_all, g_synthesis, g_mapping
 from StyleCLIP.utils import GetFeatureMaps, transform_img, compute_loss
