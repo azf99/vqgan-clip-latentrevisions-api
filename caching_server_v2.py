@@ -145,7 +145,8 @@ def check():
             return jsonify({
                 "status": "processing",
                 "id": key,
-                "rank": 0
+                "rank": 0,
+                "steps": item["steps"]
             })
 
 
