@@ -15,9 +15,9 @@ def StyleCLIP_Thread():
                 continue
             q = json.loads(db.get(req))
 
-            db.set(req, json.dumps({"status": "processing"}))
+            db.set(req, json.dumps({"status": "processing", "steps": 0}))
 
-            model = StyleCLIP(prompt = q["prompt"], img_path = q["image_path"])
+            model = StyleCLIP(prompt = q["prompt"], img_path = q["image_path"], uid = req)
             out_path = model.run()
             print("Processed id: ", req, " Saved at out_path: ", out_path)
 
@@ -35,12 +35,17 @@ def LatentRevisions_Thread():
 
             q = json.loads(db.get(req))
 
-            db.set(req, json.dumps({"status": "processing"}))
+            db.set(req, json.dumps({"status": "processing", "steps": 0}))
             q.pop("type")
             q.pop("id")
 
             model = LatentRevisions(**q)
-            out_path = model.run()
+            #out_path = model.run()
+            while model.itt <= model.iter_limit:
+                model.train(model.itt)
+                model.itt += 1
+                db.set(req, json.dumps({"status": "processing", "steps": model.itt}))
+            out_path = model.output_path
             print("Processed id: ", req, " Saved at out_path: ", out_path)
 
             out = {"out_path": out_path}

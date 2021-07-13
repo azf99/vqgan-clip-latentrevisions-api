@@ -11,6 +11,7 @@ import uuid
 from StyleCLIP.stylegan_models import g_all, g_synthesis, g_mapping
 from StyleCLIP.utils import GetFeatureMaps, transform_img, compute_loss
 
+from caching_config import db
 #torch.manual_seed(20)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -32,8 +33,8 @@ g_synthesis.eval()
 g_synthesis.to(device)
 
 class StyleCLIP(object):
-    def __init__(self, output_path = './styleclip_out', prompt: str = "", img_path = None):
-      self.id = str(uuid.uuid4())
+    def __init__(self, prompt, uid, output_path = './styleclip_out', img_path = None):
+      self.id = uid
       self.batch_size = 1
       self.prompt = prompt
       self.lr = 1e-2
@@ -142,7 +143,7 @@ class StyleCLIP(object):
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-
+            db.set(self.id, json.dumps({"status": "processing", "steps": counter}))
             if counter % self.img_save_freq == 0:
                 img = self.tensor_to_pil_img(img)
                 img.save(os.path.join(self.output_dir, f"{self.id}.png"))
