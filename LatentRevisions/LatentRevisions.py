@@ -46,13 +46,13 @@ class LatentRevisions(object):
                 ):
         self.optional_path_to_a_starter_image = img_path
         self.text_input = prompt
-        self.w0 = w0
+        self.w0 = int(w0)
         self.text_to_add = text_to_add
-        self.w1 = w1
+        self.w1 = int(w1)
         self.img_enc_path = img_enc_path
-        self.w2 = w2
+        self.w2 = int(w2)
         self.ne_img_enc_path = ne_img_enc_path
-        self.w3 = w3
+        self.w3 = int(w3)
         self.id = str(uuid.uuid4())
         self.iter_limit = 100
         self.output_dir = output_path

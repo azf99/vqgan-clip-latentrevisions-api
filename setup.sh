@@ -16,7 +16,7 @@ sudo apt update
 sudo apt-get install -y redis
 
 pip3 install git+https://github.com/openai/CLIP.git
-pip3 install requirements.txt
+pip3 install -r requirements.txt
 pip3 uninstall torchtext --yes
 
 #cd /content/
