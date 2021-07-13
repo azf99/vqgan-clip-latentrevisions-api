@@ -125,6 +125,7 @@ def check():
         if "out_path" in item.keys():
             res = open(item["out_path"], "rb")
             encoded_image = base64.b64encode(res.read()).decode("utf-8")
+            db.delete(key)
             return jsonify({
                     "status": "success",
                     "image": encoded_image
