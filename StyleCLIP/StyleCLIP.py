@@ -33,7 +33,7 @@ g_synthesis.eval()
 g_synthesis.to(device)
 
 class StyleCLIP(object):
-    def __init__(self, output_path = './styleclip_out', prompt, uid, img_path = None):
+    def __init__(self, prompt, uid, output_path = './styleclip_out', img_path = None):
       self.id = uid
       self.batch_size = 1
       self.prompt = prompt
